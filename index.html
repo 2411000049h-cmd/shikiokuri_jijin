@@ -5,169 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>四季送り自陣 リアルタイム質問板</title>
     <style>
-        :root {
-            --main-ink: #2c2c2c; /* 墨色 */
-            --paper-bg: #f2f0eb; /* 和紙色 */
-            --accent-gold: #a68b5b; /* 金泥色 */
-            --edit-q: #fff9e6; 
-            --edit-a: #eef7ff;
-        }
-
-        /* 全体背景と四季の装飾 */
-        body {
-            font-family: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif;
-            background-color: var(--paper-bg);
-            color: var(--main-ink);
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-            min-height: 100vh;
-            background-image: 
-                /* 左端：夏の緑から秋の紅へのグラデーション（水墨画のイメージ） */
-                linear-gradient(to bottom, rgba(46, 125, 50, 0.08) 0%, rgba(183, 28, 28, 0.08) 50%, transparent 100%),
-                /* 右端：冬の雪（白）のイメージ */
-                linear-gradient(to top, rgba(255, 255, 255, 0.7) 0%, transparent 50%);
-            background-attachment: fixed;
-            background-size: 15% 100%, 15% 100%;
-            background-position: left, right;
-            background-repeat: no-repeat;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            position: relative;
-            z-index: 1;
-        }
-
-        h1 {
-            text-align: center;
-            letter-spacing: 0.3em;
-            font-weight: 400;
-            border-bottom: 1px solid var(--main-ink);
-            display: table;
-            margin: 0 auto 40px;
-            padding-bottom: 10px;
-        }
-
-        /* 質問管理パネル：フォーマルな装い */
-        .admin-panel {
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid var(--accent-gold);
-            padding: 30px;
-            margin-bottom: 60px;
-            backdrop-filter: blur(5px);
-        }
+        :root { --main: #222; --bg: #fcfcfc; --edit-q: #fff9e6; --edit-a: #eef7ff; }
+        body { font-family: "Yu Mincho", serif; background: var(--bg); color: var(--main); margin: 0; padding: 20px; line-height: 1.6; }
+        .container { max-width: 700px; margin: 0 auto; }
         
-        .admin-panel.editing { background: var(--edit-q); }
+        .admin-panel { background: #fff; border: 2px solid var(--main); padding: 20px; margin-bottom: 50px; transition: 0.3s; }
+        .admin-panel.editing { background: var(--edit-q); border-color: #d4a017; }
+        .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; box-sizing: border-box; font-family: inherit; }
         
-        .input-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        button { cursor: pointer; border: 1px solid var(--main); background: #fff; transition: 0.2s; font-family: inherit; }
+        button:hover { background: var(--main); color: #fff; }
         
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-bottom: 1px solid #aaa;
-            background: transparent;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.3s;
-        }
+        .q-card { background: #fff; border: 1px solid #ddd; padding: 25px; margin-bottom: 60px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .q-title { text-align: center; font-size: 1.4rem; margin-bottom: 20px; border-bottom: 2px solid var(--main); width: 100%; }
         
-        input:focus { border-bottom-color: var(--main-ink); }
-
-        button {
-            cursor: pointer;
-            border: 1px solid var(--main-ink);
-            background: transparent;
-            padding: 10px 20px;
-            font-family: inherit;
-            transition: 0.3s;
-        }
-        
-        button:hover { background: var(--main-ink); color: #fff; }
-
-        /* 質問カード：シックなデザイン */
-        .q-card {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid #ddd;
-            padding: 40px;
-            margin-bottom: 80px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            position: relative;
-        }
-
-        .q-title {
-            text-align: center;
-            font-size: 1.5rem;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 1px double var(--main-ink);
-        }
-
-        /* チャートエリア */
-        .chart-box {
-            position: relative;
-            width: 450px;
-            height: 450px;
-            margin: 0 auto 40px;
-            background: #fff;
-            border: 1px solid var(--f-color);
-            padding: 10px;
-        }
+        .chart-box { position: relative; width: 450px; height: 450px; margin: 0 auto 30px; background: #fff; border: 8px solid var(--f-color); cursor: pointer; }
         @media (max-width: 500px) { .chart-box { width: 300px; height: 300px; } }
-        
         canvas { width: 100%; height: 100%; display: block; }
-
-        /* 回答フォーム */
-        .ans-form {
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 1px solid #eee;
-        }
-        .ans-form.editing-ans { background: var(--edit-a); padding: 20px; }
-        .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-
-        /* スライダー（和風に馴染ませる） */
-        .range-box {
-            text-align: center;
-            font-size: 0.9rem;
-            margin: 30px 0;
-            color: #666;
-        }
-        .slider-container { position: relative; width: 100%; padding: 15px 0; }
-        .mid-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #ddd; }
         
-        input[type="range"] {
-            -webkit-appearance: none;
-            background: #e0e0e0;
-            height: 2px;
-        }
+        .ans-form { background: #f9f9f9; padding: 20px; border-top: 1px solid #eee; transition: 0.3s; }
+        .ans-form.editing-ans { background: var(--edit-a); border: 2px solid #007bff; }
+        .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        
+        .range-box { text-align: center; font-size: 0.8rem; font-weight: bold; margin: 15px 0; position: relative; }
+        .slider-container { position: relative; width: 100%; padding: 10px 0; }
+        .mid-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #bbb; z-index: 1; pointer-events: none; }
+        input[type="range"] { position: relative; z-index: 2; cursor: ew-resize; }
 
-        /* 会員リスト */
-        .member-list { margin-top: 20px; font-size: 0.9rem; }
-        .member-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dotted #ccc;
-        }
+        .btn-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; gap: 10px; }
+        .mode-label { font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; display: none; }
+        .q-edit-msg { color: #d4a017; }
+        .a-edit-msg { color: #007bff; }
+        .danger-text { color: #cc0000; cursor: pointer; font-size: 0.7rem; text-decoration: underline; }
+        
+        .member-list { margin-top: 15px; border-top: 1px dotted #ccc; padding-top: 10px; }
+        .member-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 4px 0; }
 
-        /* ツールチップ */
-        #tooltip {
-            position: absolute;
-            display: none;
-            background: rgba(44, 44, 44, 0.9);
-            color: #fff;
-            padding: 12px;
-            font-size: 0.85rem;
-            z-index: 1000;
-            pointer-events: none;
-            border-left: 3px solid var(--accent-gold);
-        }
-
-        .danger-text { color: #888; cursor: pointer; font-size: 0.75rem; text-decoration: underline; margin-top: 20px; display: inline-block; }
+        #tooltip { position: absolute; display: none; background: rgba(0,0,0,0.85); color: #fff; padding: 10px; border-radius: 5px; font-size: 0.85rem; z-index: 1000; pointer-events: none; max-width: 220px; }
     </style>
 </head>
 <body>
@@ -175,35 +50,11 @@
 <div id="tooltip"></div>
 
 <div class="container">
-    <h1>四季送り 質問之板</h1>
-
-    <div class="admin-panel" id="adminPanel">
-        <div id="qEditLabel" class="mode-label q-edit-msg" style="display:none; color:var(--accent-gold);">【修正中】</div>
-        <h3 id="panelTitle" style="font-weight: 400; margin-top: 0;">新規質問の掲示</h3>
-        <input id="new_title" placeholder="題名（例：酒の嗜みと強さ）">
-        <div class="input-row" style="margin-top:20px;">
-            <input id="new_xL" placeholder="左端の項目"> <input id="new_xR" placeholder="右端の項目">
-        </div>
-        <div class="input-row">
-            <input id="new_yB" placeholder="下端の項目"> <input id="new_yT" placeholder="上端の項目">
-        </div>
-        <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
-            <label style="font-size:0.8rem;">枠の色：</label>
-            <input type="color" id="new_fColor" value="#2c2c2c" style="width:60px; height:30px; border:none; padding:0;">
-        </div>
-        <div style="display:flex; gap:10px; margin-top:25px;">
-            <button id="addQBtn" style="flex:3; background:var(--main-ink); color:#fff;">公開する</button>
-            <button id="cancelQEditBtn" style="flex:1; display:none;">中止</button>
-        </div>
-    </div>
-
+    <h1 style="text-align:center; letter-spacing: 0.2em;">四季送り自陣 質問板</h1>
     <div id="qContainer"></div>
 </div>
 
 <script type="module">
-/* -----------------------------------------------------
-   Firebase 設定と基本ロジック（機能はそのまま維持）
------------------------------------------------------ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -223,7 +74,6 @@ const dbRef = ref(db, 'shiki_v6');
 
 let questions = [];
 let localImageData = {};
-let currentEditingQIdx = null;
 
 onValue(dbRef, (snapshot) => {
     questions = snapshot.val() || [];
@@ -238,214 +88,65 @@ function renderCards() {
         card.className = "q-card";
         card.innerHTML = `
             <div class="q-title">${q.title}</div>
-            <div class="chart-box" style="--f-color: ${q.frameColor}" onclick="window.checkClick(event, ${qIdx})">
+            <div class="chart-box" style="--f-color: ${q.frameColor}" onclick="checkClick(event, ${qIdx})">
                 <canvas id="can-${qIdx}" width="450" height="450"></canvas>
-            </div>
-            <div class="ans-form" id="ansForm-${qIdx}">
-                <div id="aEditLabel-${qIdx}" class="mode-label" style="display:none; color:#007bff; margin-bottom:10px;">【回答修正中】</div>
-                <div class="ans-grid">
-                    <input id="name-${qIdx}" placeholder="お名前（記名）">
-                    <div style="font-size:0.8rem;">
-                        画像：<input type="file" onchange="window.handleFile(this, ${qIdx})" accept="image/*" style="border:none; font-size:0.7rem;">
-                    </div>
-                </div>
-                <textarea id="comm-${qIdx}" placeholder="添え書き（アイコンクリックで表示）" rows="1"></textarea>
-                
-                <div class="range-box">
-                    <div>${q.xL} ━━ ${q.xR}</div>
-                    <div class="slider-container"><div class="mid-line"></div><input type="range" id="x-${qIdx}" min="1" max="100" value="50"></div>
-                    <div style="margin-top:10px;">${q.yB} ━━ ${q.yT}</div>
-                    <div class="slider-container"><div class="mid-line"></div><input type="range" id="y-${qIdx}" min="1" max="100" value="50"></div>
-                </div>
-
-                <button id="sendBtn-${qIdx}" onclick="window.sendAnswer(${qIdx})" style="width:100%; letter-spacing:0.2em;">反映する</button>
-                <button id="cancelAnswBtn-${qIdx}" onclick="window.cancelAnswerEdit(${qIdx})" style="width:100%; margin-top:10px; display:none; border:none; font-size:0.8rem;">中止</button>
-
-                <div class="member-list" id="list-${qIdx}"></div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="danger-text" onclick="window.deleteQuestion(${qIdx})">この質問を削除</span>
-                    <button onclick="window.prepareEditQ(${qIdx})" style="font-size:0.7rem; border:none; text-decoration:underline;">質問内容の編集</button>
-                </div>
             </div>
         `;
         container.appendChild(card);
-        renderMemberList(qIdx);
         drawChart(qIdx);
     });
 }
 
-// 以下、グローバルに関数を紐付け（onclick対応）
-window.handleFile = (input, idx) => {
-    const reader = new FileReader();
-    reader.onload = (e) => { localImageData[idx] = e.target.result; };
-    reader.readAsDataURL(input.files[0]);
-};
-
 async function drawChart(idx) {
     const q = questions[idx];
-    const canvas = document.getElementById(`can-${idx}`);
+    const canvas = document.getElementById(\`can-\${idx}\`);
     if(!canvas) return;
     const ctx = canvas.getContext("2d");
+
     ctx.clearRect(0,0,450,450);
-    
-    // 背景の十字線
-    ctx.strokeStyle = "#ddd"; 
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(50,225); ctx.lineTo(400,225); ctx.moveTo(225,50); ctx.lineTo(225,400); ctx.stroke();
-    
-    // ラベル
-    ctx.fillStyle = "#888"; ctx.font = "12px serif"; ctx.textAlign="center";
-    ctx.fillText(q.xL, 25, 228); ctx.fillText(q.xR, 425, 228); ctx.fillText(q.yT, 225, 30); ctx.fillText(q.yB, 225, 435);
+    ctx.strokeStyle = "#eee";
+    ctx.beginPath();
+    ctx.moveTo(50,225); ctx.lineTo(400,225);
+    ctx.moveTo(225,50); ctx.lineTo(225,400);
+    ctx.stroke();
+
+    ctx.fillStyle = "#999";
+    ctx.font = "bold 13px serif";
+    ctx.textAlign="center";
+    ctx.fillText(q.xL, 25, 225);
+    ctx.fillText(q.xR, 425, 225);
+    ctx.fillText(q.yT, 225, 25);
+    ctx.fillText(q.yB, 225, 435);
 
     if(!q.answers) return;
+
     for(const a of q.answers) {
         const px = 50 + (a.x / 100) * 350;
         const py = 50 + ((100 - a.y) / 100) * 350;
-        const size = 44;
-        
+        const size = 50;
+
         if(a.img) {
-            const img = new Image(); img.src = a.img;
+            const img = new Image();
+            img.src = a.img;
             await new Promise(r => img.onload = r);
-            ctx.save(); ctx.beginPath(); ctx.arc(px, py, size/2, 0, Math.PI*2); ctx.clip();
-            ctx.drawImage(img, px - size/2, py - size/2, size, size); ctx.restore();
-            ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(px, py, size/2, 0, Math.PI*2);
+            ctx.clip();
+            ctx.drawImage(img, px - size/2, py - size/2, size, size);
+            ctx.restore();
         } else {
-            ctx.fillStyle = "#2c2c2c"; ctx.beginPath(); ctx.arc(px, py, 8, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#333";
+            ctx.beginPath();
+            ctx.arc(px, py, 10, 0, Math.PI*2);
+            ctx.fill();
         }
-        ctx.fillStyle = "#2c2c2c"; ctx.font = "11px serif";
-        ctx.fillText(a.name, px, py + 35);
+
+        ctx.fillStyle = "#000";
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillText(a.name, px, py + (size/2) + 12);
     }
-}
-
-window.checkClick = (e, qIdx) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 450;
-    const y = ((e.clientY - rect.top) / rect.height) * 450;
-    const tooltip = document.getElementById("tooltip");
-    const found = (questions[qIdx].answers || []).find(a => {
-        const px = 50 + (a.x / 100) * 350;
-        const py = 50 + ((100 - a.y) / 100) * 350;
-        return Math.sqrt((x-px)**2 + (y-py)**2) < 25;
-    });
-    if(found && found.comment) {
-        tooltip.innerText = `${found.name}: ${found.comment}`;
-        tooltip.style.display = "block";
-        tooltip.style.left = e.pageX + 15 + "px";
-        tooltip.style.top = e.pageY + 15 + "px";
-        setTimeout(() => tooltip.style.display = "none", 5000);
-    } else { tooltip.style.display = "none"; }
-};
-
-window.sendAnswer = (idx) => {
-    const name = document.getElementById(`name-${idx}`).value.trim();
-    if(!name) return alert("お名前をご記入ください");
-    if(!questions[idx].answers) questions[idx].answers = [];
-    const existingIdx = questions[idx].answers.findIndex(a => a.name === name);
-    const data = {
-        name,
-        x: Number(document.getElementById(`x-${idx}`).value),
-        y: Number(document.getElementById(`y-${idx}`).value),
-        comment: document.getElementById(`comm-${idx}`).value,
-        img: localImageData[idx] || (existingIdx > -1 ? questions[idx].answers[existingIdx].img : null)
-    };
-    if(existingIdx > -1) questions[idx].answers[existingIdx] = data;
-    else questions[idx].answers.push(data);
-    set(dbRef, questions);
-    localImageData[idx] = null;
-    window.cancelAnswerEdit(idx);
-};
-
-window.prepareEditAns = (qIdx, aIdx) => {
-    const a = questions[qIdx].answers[aIdx];
-    document.getElementById(`name-${qIdx}`).value = a.name;
-    document.getElementById(`comm-${qIdx}`).value = a.comment || "";
-    document.getElementById(`x-${qIdx}`).value = a.x;
-    document.getElementById(`y-${qIdx}`).value = a.y;
-    document.getElementById(`ansForm-${qIdx}`).classList.add("editing-ans");
-    document.getElementById(`aEditLabel-${qIdx}`).style.display = "block";
-    document.getElementById(`sendBtn-${qIdx}`).innerText = "修正を確定";
-    document.getElementById(`cancelAnswBtn-${qIdx}`).style.display = "block";
-};
-
-window.cancelAnswerEdit = (qIdx) => {
-    const form = document.getElementById(`ansForm-${qIdx}`);
-    form.classList.remove("editing-ans");
-    document.getElementById(`aEditLabel-${qIdx}`).style.display = "none";
-    document.getElementById(`sendBtn-${qIdx}`).innerText = "反映する";
-    document.getElementById(`cancelAnswBtn-${qIdx}`).style.display = "none";
-    document.getElementById(`name-${qIdx}`).value = "";
-    document.getElementById(`comm-${qIdx}`).value = "";
-};
-
-window.deleteTargetAnswer = (qIdx, aIdx) => {
-    if(confirm("この回答を消去しますか？")) {
-        questions[qIdx].answers.splice(aIdx, 1);
-        set(dbRef, questions);
-    }
-};
-
-window.prepareEditQ = (idx) => {
-    currentEditingQIdx = idx;
-    const q = questions[idx];
-    document.getElementById("new_title").value = q.title;
-    document.getElementById("new_xL").value = q.xL;
-    document.getElementById("new_xR").value = q.xR;
-    document.getElementById("new_yB").value = q.yB;
-    document.getElementById("new_yT").value = q.yT;
-    document.getElementById("new_fColor").value = q.frameColor;
-    document.getElementById("adminPanel").classList.add("editing");
-    document.getElementById("panelTitle").innerText = "質問内容の修正";
-    document.getElementById("addQBtn").innerText = "修正を保存";
-    document.getElementById("qEditLabel").style.display = "block";
-    document.getElementById("cancelQEditBtn").style.display = "block";
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-document.getElementById("addQBtn").onclick = () => {
-    const title = document.getElementById("new_title").value;
-    if(!title) return;
-    const qData = {
-        title, frameColor: document.getElementById("new_fColor").value,
-        xL: document.getElementById("new_xL").value || "左", xR: document.getElementById("new_xR").value || "右",
-        yT: document.getElementById("new_yT").value || "上", yB: document.getElementById("new_yB").value || "下",
-        answers: currentEditingQIdx !== null ? (questions[currentEditingQIdx].answers || []) : []
-    };
-    if(currentEditingQIdx !== null) { questions[currentEditingQIdx] = qData; currentEditingQIdx = null; document.getElementById("cancelQEditBtn").click(); }
-    else { questions.push(qData); }
-    set(dbRef, questions);
-    document.getElementById("new_title").value = "";
-};
-
-document.getElementById("cancelQEditBtn").onclick = () => {
-    currentEditingQIdx = null;
-    document.getElementById("adminPanel").classList.remove("editing");
-    document.getElementById("panelTitle").innerText = "新規質問の掲示";
-    document.getElementById("addQBtn").innerText = "公開する";
-    document.getElementById("qEditLabel").style.display = "none";
-    document.getElementById("cancelQEditBtn").style.display = "none";
-    document.getElementById("new_title").value = "";
-};
-
-window.deleteQuestion = (idx) => { if(confirm("この質問カードを永久に消去しますか？")) { questions.splice(idx, 1); set(dbRef, questions); } };
-
-function renderMemberList(qIdx) {
-    const listDiv = document.getElementById(`list-${qIdx}`);
-    const answers = questions[qIdx].answers || [];
-    if(answers.length === 0) return;
-    listDiv.innerHTML = "<div style='margin-bottom:10px; font-weight:bold;'>回答者一覧</div>";
-    answers.forEach((a, aIdx) => {
-        const item = document.createElement("div");
-        item.className = "member-item";
-        item.innerHTML = `
-            <span>${a.name}</span>
-            <div>
-                <button onclick="window.prepareEditAns(${qIdx}, ${aIdx})" style="font-size:0.65rem; padding:2px 8px; border:none; text-decoration:underline;">編集</button>
-                <button onclick="window.deleteTargetAnswer(${qIdx}, ${aIdx})" style="font-size:0.65rem; padding:2px 8px; border:none; color:#aa0000;">削除</button>
-            </div>
-        `;
-        listDiv.appendChild(item);
-    });
 }
 </script>
 </body>
